@@ -9,6 +9,7 @@
     "web": "DARK_MODE=media expo start --web"
   },
   "dependencies": {
+    "@react-native-community/cli": "latest",
     "@expo/metro-runtime": "~4.0.1",
     "@gluestack-ui/icon": "^0.1.25",
     "@gluestack-ui/nativewind-utils": "^1.0.26",

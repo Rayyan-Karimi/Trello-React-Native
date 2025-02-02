@@ -1,4 +1,3 @@
-
 import { GluestackUIProvider } from "@/components/ui/gluestack-ui-provider";
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
@@ -20,17 +19,15 @@ export default function App() {
           headerTintColor: '#fff',
           headerTitleStyle: { fontWeight: 'bold' },
           headerTitleAlign: "center",
-          // contentStyle: { backgroundColor: '#e8e4f3' }
         }}>
           <Stack.Screen name="Boards" component={BoardScreen} options={{
-            // title: '',
             headerRight: () => (
               <View style={styles.flexRow}>
-                <Pressable onPress={() => alert('Board right button pressed!')}>
-                  <Text style={{ color: '#fff', fontSize: 16 }}>Search</Text>
+                <Pressable onPress={() => alert('Search pressed!')}>
+                  <Text style={{ color: '#fff', fontSize: 20 }}>⌕</Text>
                 </Pressable>
-                <Pressable onPress={() => alert('Board right button pressed!')}>
-                  <Text style={{ color: '#fff', fontSize: 16 }}>Notifications</Text>
+                <Pressable onPress={() => alert('Notifications pressed!')} style={{ marginLeft: 16 }}>
+                  <Text style={{ color: '#fff', fontSize: 20 }}>🔔</Text>
                 </Pressable>
               </View>
             ),
@@ -39,14 +36,17 @@ export default function App() {
             title: 'Lists',
             headerRight: () => (
               <View style={styles.flexRow}>
-                <Pressable onPress={() => alert('Lists right button pressed!')}>
-                  <Text style={{ color: '#fff', fontSize: 16 }}>Filter</Text>
+                {/* filter */}
+                <Pressable onPress={() => alert('Filter pressed!')}>
+                  <Text style={{ color: '#fff', fontSize: 20 }}>🧹</Text>
                 </Pressable>
-                <Pressable onPress={() => alert('Lists right button pressed!')}>
-                  <Text style={{ color: '#fff', fontSize: 16 }}>Notifications</Text>
+                {/* notif */}
+                <Pressable onPress={() => alert('Notifications pressed!')} style={{ marginLeft: 16 }}>
+                  <Text style={{ color: '#fff', fontSize: 20 }}>🔔</Text>
                 </Pressable>
-                <Pressable onPress={() => alert('Lists right button pressed!')}>
-                  <Text style={{ color: '#fff', fontSize: 16 }}>Board Menu</Text>
+                {/* Menu 3 dots */}
+                <Pressable onPress={() => alert('Board Menu pressed!')} style={{ marginLeft: 16 }}>
+                  <Text style={{ color: '#fff', fontSize: 20 }}>⋯</Text>
                 </Pressable>
               </View>
             ),
@@ -54,8 +54,9 @@ export default function App() {
           <Stack.Screen name="Card" component={CardScreen} options={{
             headerRight: () => (
               <View style={styles.flexRow}>
-                <Pressable onPress={() => alert('Card right button pressed!')}>
-                  <Text style={{ color: '#fff', fontSize: 16 }}>Options</Text>
+                {/* Options icon 3 dots horizontal */}
+                <Pressable onPress={() => alert('Options pressed!')}>
+                  <Text style={{ color: '#fff', fontSize: 20 }}>⋯</Text>
                 </Pressable>
               </View>
             ),
@@ -74,6 +75,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   flexRow: {
-    flexDirection: 'row'
+    flexDirection: 'row',
+    alignItems: 'center',
   }
 });
