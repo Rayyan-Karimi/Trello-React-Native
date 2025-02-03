@@ -1,41 +1,77 @@
 import React, { useState, useEffect } from 'react';
 import {
-    Pressable,
-    View,
-    FlatList,
     Text,
-    Platform,
-    StyleSheet,
+    View,
+    Alert,
     Button,
-    SafeAreaView,
+    FlatList,
+    Platform,
     TextInput,
+    Pressable,
+    SafeAreaView,
     KeyboardAvoidingView
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { fetchBoards } from '@/components/services/boards.service';
+// internal imports
+import { fetchBoards, addBoard, deleteBoard } from '@/components/services/boards.service';
+import styles from '../css/BoardStyle';
 
 const BoardScreen = ({ navigation }) => {
-    // State for boards and new board name input
     const [boards, setBoards] = useState([]);
     const [newText, setNewText] = useState("");
 
-    // Delete a board on long press
     const handleDelete = (boardId) => {
-        setBoards(prev => prev.filter(board => board.id !== boardId));
+        Alert.alert(
+            "Delete Card",
+            "Are you sure you want to delete this card?",
+            [
+                {
+                    text: "Cancel",
+                    style: "cancel",
+                },
+                {
+                    text: "Delete",
+                    style: "destructive",
+                    onPress: async () => {
+                        try {
+                            const deletedBoardData = await deleteBoard(boardId);
+                            if (!deletedBoardData) {
+                                console.error("Failed to delete board.");
+                                return;
+                            }
+                            console.log("Deleted:", deletedBoardData);
+                            setBoards(prevBoards =>
+                                prevBoards.filter(board => board.id !== boardId)
+                            );
+                        } catch (err) {
+                            console.error(err);
+                        }
+                    },
+                },
+            ],
+            { cancelable: true }
+        );
     };
 
-    // Add a new board
-    const handleAdd = () => {
-        if (!newText.trim()) return;
-        const newBoard = {
-            id: Date.now(), // using Date.now() as a simple unique id
-            name: newText.trim(),
-        };
-        setBoards(prev => [...prev, newBoard]);
-        setNewText('');
+    const handleAdd = async () => {
+        if (!newText || !newText.trim()) return;
+        try {
+            const newBoardData = await addBoard(newText);
+            if (!newBoardData) {
+                console.error("Failed to create board.");
+                return;
+            }
+            console.log("New board added:", newBoardData.id);
+            const newBoard = {
+                id: newBoardData.id,
+                name: newText.trim(),
+            };
+            setBoards(prev => [...prev, newBoard]);
+            setNewText('');
+        } catch (err) {
+            console.error(err);
+        }
     };
 
-    // Fetch boards from API on mount
     const fetchBoardsViaApi = async () => {
         try {
             const newBoards = await fetchBoards();
@@ -91,65 +127,3 @@ const BoardScreen = ({ navigation }) => {
 };
 
 export default BoardScreen;
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: "#F5F5F5",
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingTop: Platform.OS === "android" ? 25 : 0,
-    },
-    boardItem: {
-        backgroundColor: "white",
-        borderRadius: 16,
-        borderWidth: 2,
-        paddingHorizontal: 32,
-        paddingVertical: 16,
-        margin: 16,
-        ...Platform.select({
-            ios: {
-                shadowOffset: { width: 2, height: 2 },
-                shadowColor: "#333",
-                shadowOpacity: 0.3,
-                shadowRadius: 4,
-            },
-            android: {
-                elevation: 5,
-            },
-        }),
-    },
-    text: {
-        fontSize: 20,
-        textAlign: 'center',
-    },
-    addListContainer: {
-        position: 'absolute',
-        right: 16,
-        bottom: 16,
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: '#fff',
-        borderRadius: 8,
-        padding: 12,
-        ...Platform.select({
-            ios: {
-                shadowOffset: { width: 0, height: 2 },
-                shadowColor: '#000',
-                shadowOpacity: 0.3,
-                shadowRadius: 3,
-            },
-            android: {
-                elevation: 5,
-            },
-        }),
-    },
-    listInput: {
-        borderWidth: 1,
-        borderColor: '#ccc',
-        borderRadius: 8,
-        padding: 8,
-        marginRight: 8,
-        width: 150,
-    },
-});

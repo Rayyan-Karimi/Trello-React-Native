@@ -2,11 +2,9 @@ import {
     TextInput,
     Button,
     View,
-    FlatList,
     Pressable,
     Platform,
     Text,
-    StyleSheet,
     SafeAreaView,
     KeyboardAvoidingView, ScrollView
 } from 'react-native';
@@ -14,6 +12,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { fetchChecklists } from '@/components/services/api.service';
 import { useHeaderHeight } from '@react-navigation/elements'
+import styles from '../css/CardStyle'
 
 const CardScreen = ({ route }) => {
     const navigation = useNavigation();
@@ -125,8 +124,8 @@ const CardScreen = ({ route }) => {
     return (
         <KeyboardAvoidingView
             style={{ flex: 1 }}
-            // behavior={Platform.OS === "ios" ? "padding" : "height"}
-            behavior={"height"}
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
+            // behavior={"height"}
             keyboardVerticalOffset={100}
         >
             <SafeAreaView style={styles.container}>
@@ -198,71 +197,3 @@ const CardScreen = ({ route }) => {
 };
 
 export default CardScreen;
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        alignItems: 'stretch',
-        backgroundColor: "#F5F5F5",
-        paddingTop: Platform.OS === "android" ? 25 : 0,
-    },
-    addChecklistContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        padding: 16,
-    },
-    checklistContainer: {
-        backgroundColor: "white",
-        borderRadius: 16,
-        borderWidth: 2,
-        padding: 16,
-        marginVertical: 8,
-        marginHorizontal: 16,
-        // Adjust width to full screen minus margins if needed
-    },
-    header: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        marginBottom: 8,
-    },
-    checklistName: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        flex: 1,
-    },
-    percentageText: {
-        fontSize: 16,
-        color: "#555",
-        marginBottom: 8,
-    },
-    checkItem: {
-        borderRadius: 16,
-        borderWidth: 2,
-        padding: 16,
-        marginVertical: 8,
-    },
-    checkItemText: {
-        fontSize: 16,
-        color: "#fff",
-    },
-    emptyText: {
-        fontSize: 18,
-        color: "#888",
-        textAlign: "center",
-        marginVertical: 8,
-    },
-    addItemContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginTop: 16,
-    },
-    input: {
-        borderWidth: 1,
-        borderColor: '#ccc',
-        borderRadius: 8,
-        padding: 8,
-        marginRight: 8,
-        flex: 1,
-    },
-});
