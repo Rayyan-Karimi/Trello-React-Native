@@ -60,4 +60,45 @@ export default styles = StyleSheet.create({
         marginRight: 8,
         width: 150,
     },
+    flexRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    headerTitleContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    logo: {
+        width: 100,
+        height: 30,
+        marginRight: 8,
+    },
+    headerTitleText: {
+        fontWeight: 'bold',
+        fontSize: 18,
+    },
+    cardItem: {
+        backgroundColor: '#fff',
+        borderRadius: 4,
+        padding: 8,
+        marginBottom: 8,
+        // any other styling you need
+      },
+      cardText: {
+        fontSize: 16,
+        color: '#333',
+      },
+      cardBadgeContainer: {
+        marginTop: 4,
+        backgroundColor: 'yellow',  // or your preferred yellow shade
+        paddingHorizontal: 4,
+        paddingVertical: 2,
+        borderRadius: 2,
+        alignSelf: 'flex-start',
+      },
+      cardBadgeText: {
+        fontSize: 12,
+        color: '#333',
+      },
 });

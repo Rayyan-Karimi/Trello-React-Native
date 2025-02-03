@@ -1,13 +1,25 @@
 import React from 'react'
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View, Image } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 // internal imports
 import ListsScreen from "@/components/ui/screens/ListsScreen";
 import CardScreen from "@/components/ui/screens/CardScreen";
 import BoardScreen from '@/components/ui/screens/BoardsScreen';
+import styles from '../css/BoardStyle'
 
 const Stack = createNativeStackNavigator();
+
+const CustomHeaderTitle = ({ title, tintColor }) => (
+    <View style={styles.headerTitleContainer}>
+        <Image
+            source={require('@/assets/trello-logo.png')}
+            style={styles.logo}
+            resizeMode="contain"
+        />
+        <Text style={[styles.headerTitleText, { color: tintColor }]}>{title}</Text>
+    </View>
+);
 
 const NavigationStacks = () => {
     return (
@@ -21,6 +33,10 @@ const NavigationStacks = () => {
                 headerTitleAlign: "center",
             }}>
                 <Stack.Screen name="Boards" component={BoardScreen} options={{
+                    // headerShown: false,
+                    headerTitle: (props) => (
+                        <CustomHeaderTitle title={'Boards'} />
+                    ),
                     headerRight: () => (
                         <View style={styles.flexRow}>
                             <Pressable onPress={() => alert('Search pressed!')}>
@@ -32,8 +48,11 @@ const NavigationStacks = () => {
                         </View>
                     ),
                 }} />
-                <Stack.Screen name="Lists" component={ListsScreen} options={{
-                    title: 'Lists',
+                <Stack.Screen name="Lists" component={ListsScreen} options={({ route }) => ({
+                    title: route.params.boardName || 'Lists',
+                    headerTitle: (props) => (
+                        <CustomHeaderTitle title={`Lists-${route.params.boardName}` || 'Lists'} {...props} />
+                    ),
                     headerRight: () => (
                         <View style={styles.flexRow}>
                             {/* filter */}
@@ -50,8 +69,12 @@ const NavigationStacks = () => {
                             </Pressable>
                         </View>
                     ),
-                }} />
-                <Stack.Screen name="Card" component={CardScreen} options={{
+                })} />
+                <Stack.Screen name="Card" component={CardScreen} options={({ route }) => ({
+                    title: route.params.cardName || 'Card',
+                    headerTitle: (props) => (
+                        <CustomHeaderTitle title={`Card-${route.params.cardName}` || 'Card'} {...props} />
+                    ),
                     headerRight: () => (
                         <View style={styles.flexRow}>
                             {/* Options icon 3 dots horizontal */}
@@ -60,23 +83,10 @@ const NavigationStacks = () => {
                             </Pressable>
                         </View>
                     ),
-                }} />
+                })} />
             </Stack.Navigator>
         </NavigationContainer>
     )
 }
 
 export default NavigationStacks
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#fff',
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    flexRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    }
-});

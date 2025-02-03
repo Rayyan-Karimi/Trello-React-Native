@@ -6,21 +6,31 @@ import {
     Platform,
     Text,
     SafeAreaView,
-    KeyboardAvoidingView, ScrollView
+    KeyboardAvoidingView,
+    ScrollView
 } from 'react-native';
 import React, { useState, useEffect } from 'react';
 import { useNavigation } from '@react-navigation/native';
-import { fetchChecklists } from '@/components/services/api.service';
-import { useHeaderHeight } from '@react-navigation/elements'
-import styles from '../css/CardStyle'
+import { useHeaderHeight } from '@react-navigation/elements';
+import styles from '../css/CardStyle';
+
+// Import our checklist API functions
+import {
+    fetchChecklists,
+    addChecklist,
+    deleteChecklist,
+    addCheckItem,
+    deleteCheckItem,
+    updateCheckItemState
+} from '@/components/services/checklist.service';
 
 const CardScreen = ({ route }) => {
     const navigation = useNavigation();
     const { boardId, listId, cardId } = route.params;
-    const height = useHeaderHeight()
+    const headerHeight = useHeaderHeight();
 
     // State for checklists (each checklist: { id, name, checkItems })
-    const [checklist, setChecklist] = useState([]);
+    const [checklists, setChecklists] = useState([]);
 
     // State for new check item text (object keyed by checklist id)
     const [newItemText, setNewItemText] = useState({});
@@ -28,13 +38,13 @@ const CardScreen = ({ route }) => {
     // State for new checklist name input (for adding a new checklist)
     const [newChecklistName, setNewChecklistName] = useState("");
 
-    // Fetch checklists from the API
-    const fetchChecklistViaApi = async (theId) => {
+    // Fetch checklists for this card from the API
+    const fetchChecklistViaApi = async (theCardId) => {
         try {
-            const response = await fetchChecklists(theId);
-            setChecklist(response);
+            const response = await fetchChecklists(theCardId);
+            setChecklists(response);
         } catch (err) {
-            console.error(err);
+            console.error("Error fetching checklists:", err);
         }
     };
 
@@ -42,76 +52,99 @@ const CardScreen = ({ route }) => {
         fetchChecklistViaApi(cardId);
     }, [cardId]);
 
-    // ----- Check Items Functions -----
+    // ----- Checklist Item Functions -----
 
-    // Add a new check item to a specific checklist
-    const addCheckItem = (checklistId) => {
+    // Add a new check item to a specific checklist via API integration
+    const handleAddCheckItem = async (checklistId) => {
         const text = newItemText[checklistId];
-        if (!text || !text.trim()) return; // ignore empty input
-
-        const newCheckItem = {
-            id: Date.now(), // simple id generator; consider a better solution for production
-            name: text,
-            state: 'incomplete'
-        };
-
-        setChecklist(prev =>
-            prev.map(chklist =>
-                chklist.id === checklistId
-                    ? { ...chklist, checkItems: [...chklist.checkItems, newCheckItem] }
-                    : chklist
-            )
-        );
-        // Clear the input field for this checklist
-        setNewItemText(prev => ({ ...prev, [checklistId]: "" }));
+        if (!text || !text.trim()) return;
+        try {
+            const newCheckItem = await addCheckItem(checklistId, text);
+            if (newCheckItem) {
+                setChecklists(prev =>
+                    prev.map(chklist =>
+                        chklist.id === checklistId
+                            ? { ...chklist, checkItems: [...chklist.checkItems, newCheckItem] }
+                            : chklist
+                    )
+                );
+                // Clear the input for this checklist
+                setNewItemText(prev => ({ ...prev, [checklistId]: "" }));
+            }
+        } catch (err) {
+            console.error("Error adding check item:", err);
+        }
     };
 
-    // Delete a check item from a checklist
-    const handleDeleteCheckItem = (checklistId, checkItemId) => {
-        setChecklist(prev =>
-            prev.map(chklist =>
-                chklist.id === checklistId
-                    ? { ...chklist, checkItems: chklist.checkItems.filter(item => item.id !== checkItemId) }
-                    : chklist
-            )
-        );
+    // Delete a check item from a checklist via API integration
+    const handleDeleteCheckItem = async (checklistId, checkItemId) => {
+        try {
+            // Call API to delete the check item. (Note: Trello’s endpoint requires cardId and checkItemId.)
+            const response = await deleteCheckItem(cardId, checkItemId);
+            if (response) {
+                setChecklists(prev =>
+                    prev.map(chklist =>
+                        chklist.id === checklistId
+                            ? { ...chklist, checkItems: chklist.checkItems.filter(item => item.id !== checkItemId) }
+                            : chklist
+                    )
+                );
+            }
+        } catch (err) {
+            console.error("Error deleting check item:", err);
+        }
     };
 
-    // Toggle the state of a check item
-    const toggleCheckItemState = (checklistId, checkItemId) => {
-        setChecklist(prev =>
-            prev.map(chklist =>
-                chklist.id === checklistId
-                    ? {
-                        ...chklist,
-                        checkItems: chklist.checkItems.map(item =>
-                            item.id === checkItemId
-                                ? { ...item, state: item.state === 'incomplete' ? 'complete' : 'incomplete' }
-                                : item
-                        )
-                    }
-                    : chklist
-            )
-        );
+    // Toggle the state of a check item via API integration
+    const handleToggleCheckItemState = async (checklistId, checkItemId, currentState) => {
+        try {
+            const newState = currentState === 'incomplete' ? 'complete' : 'incomplete';
+            const updatedItem = await updateCheckItemState(cardId, checkItemId, newState);
+            if (updatedItem) {
+                setChecklists(prev =>
+                    prev.map(chklist =>
+                        chklist.id === checklistId
+                            ? {
+                                ...chklist,
+                                checkItems: chklist.checkItems.map(item =>
+                                    item.id === checkItemId ? { ...item, state: newState } : item
+                                )
+                            }
+                            : chklist
+                    )
+                );
+            }
+        } catch (err) {
+            console.error("Error toggling check item state:", err);
+        }
     };
 
     // ----- Checklist Functions -----
 
-    // Add a new checklist
-    const addChecklist = () => {
+    // Add a new checklist via API integration
+    const handleAddChecklist = async () => {
         if (!newChecklistName.trim()) return;
-        const newChk = {
-            id: Date.now(),
-            name: newChecklistName,
-            checkItems: []
-        };
-        setChecklist(prev => [...prev, newChk]);
-        setNewChecklistName("");
+        try {
+            const newChk = await addChecklist(cardId, newChecklistName);
+            if (newChk) {
+                setChecklists(prev => [...prev, newChk]);
+                setNewChecklistName("");
+            }
+        } catch (err) {
+            console.error("Error adding checklist:", err);
+        }
     };
 
-    // Delete an entire checklist
-    const deleteChecklist = (checklistId) => {
-        setChecklist(prev => prev.filter(chklist => chklist.id !== checklistId));
+    // Delete an entire checklist via API integration
+    const handleDeleteChecklist = async (checklistId) => {
+        try {
+            const response = await deleteChecklist(checklistId);
+            if (response) {
+                setChecklists(prev => prev.filter(chklist => chklist.id !== checklistId));
+            }
+        } catch (err) {
+            console.error("Error deleting checklist:", err);
+        }
     };
 
     // Function to compute completion percentage for a checklist
@@ -125,7 +158,6 @@ const CardScreen = ({ route }) => {
         <KeyboardAvoidingView
             style={{ flex: 1 }}
             behavior={Platform.OS === "ios" ? "padding" : "height"}
-            // behavior={"height"}
             keyboardVerticalOffset={100}
         >
             <SafeAreaView style={styles.container}>
@@ -137,32 +169,30 @@ const CardScreen = ({ route }) => {
                         value={newChecklistName}
                         onChangeText={setNewChecklistName}
                     />
-                    <Button title="Add Checklist" onPress={addChecklist} />
+                    <Button title="Add Checklist" onPress={handleAddChecklist} />
                 </View>
 
-                <ScrollView
-                    contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 100 }}
-                >
-                    {checklist.map((item) => {
-                        const completion = getCompletionPercentage(item.checkItems);
+                <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 100 }}>
+                    {checklists.map((chklist) => {
+                        const completion = getCompletionPercentage(chklist.checkItems);
                         return (
-                            <View style={styles.checklistContainer} key={item.id.toString()}>
+                            <View style={styles.checklistContainer} key={chklist.id.toString()}>
                                 {/* Checklist header with name and Delete button */}
                                 <View style={styles.header}>
-                                    <Text style={styles.checklistName}>Checklist: {item.name}</Text>
-                                    <Button title="Delete" onPress={() => deleteChecklist(item.id)} />
+                                    <Text style={styles.checklistName}>Checklist: {chklist.name}</Text>
+                                    <Button title="Delete" onPress={() => handleDeleteChecklist(chklist.id)} />
                                 </View>
 
                                 {/* Display completion percentage */}
                                 <Text style={styles.percentageText}>{completion}% completed</Text>
 
                                 {/* Check Items */}
-                                {item.checkItems.length > 0 ? (
-                                    item.checkItems.map((checkItem, index) => (
+                                {chklist.checkItems && chklist.checkItems.length > 0 ? (
+                                    chklist.checkItems.map((checkItem) => (
                                         <Pressable
-                                            key={index}
-                                            onPress={() => toggleCheckItemState(item.id, checkItem.id)}
-                                            onLongPress={() => handleDeleteCheckItem(item.id, checkItem.id)}
+                                            key={checkItem.id}
+                                            onPress={() => handleToggleCheckItemState(chklist.id, checkItem.id, checkItem.state)}
+                                            onLongPress={() => handleDeleteCheckItem(chklist.id, checkItem.id)}
                                             style={[
                                                 styles.checkItem,
                                                 { backgroundColor: checkItem.state === 'incomplete' ? 'red' : 'green' }
@@ -180,12 +210,12 @@ const CardScreen = ({ route }) => {
                                     <TextInput
                                         style={styles.input}
                                         placeholder="Add item..."
-                                        value={newItemText[item.id] || ""}
+                                        value={newItemText[chklist.id] || ""}
                                         onChangeText={(text) =>
-                                            setNewItemText(prev => ({ ...prev, [item.id]: text }))
+                                            setNewItemText(prev => ({ ...prev, [chklist.id]: text }))
                                         }
                                     />
-                                    <Button title="Add" onPress={() => addCheckItem(item.id)} />
+                                    <Button title="Add" onPress={() => handleAddCheckItem(chklist.id)} />
                                 </View>
                             </View>
                         );

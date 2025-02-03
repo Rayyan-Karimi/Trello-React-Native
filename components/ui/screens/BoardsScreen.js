@@ -22,7 +22,7 @@ const BoardScreen = ({ navigation }) => {
     const handleDelete = (boardId) => {
         Alert.alert(
             "Delete Card",
-            "Are you sure you want to delete this card?",
+            "Are you sure you want to delete this board?",
             [
                 {
                     text: "Cancel",
@@ -101,7 +101,7 @@ const BoardScreen = ({ navigation }) => {
                             style={[styles.boardItem, styles.text]}
                             onPress={() =>
                                 navigation.navigate("Lists", {
-                                    boardId: item.id,
+                                    boardId: item.id,boardName: item.name
                                 })
                             }
                             onLongPress={() => handleDelete(item.id)}

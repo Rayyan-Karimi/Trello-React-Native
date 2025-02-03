@@ -8,10 +8,12 @@ import {
     Pressable,
     SafeAreaView,
 } from 'react-native';
-import React, { useState, useEffect } from 'react';
-import { useNavigation } from '@react-navigation/native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 // internal imports
-import { fetchCards, fetchLists } from '@/components/services/api.service';
+import { fetchCards } from '@/components/services/api.service';
+import { fetchLists, addLists, updateLists, deleteList } from '@/components/services/lists.service';
+import { addCards, deleteCard } from '@/components/services/cards.service';
 import styles from '../css/ListStyle'
 
 const ListsScreen = ({ route }) => {
@@ -37,6 +39,12 @@ const ListsScreen = ({ route }) => {
         fetchData();
     }, [boardId]);
 
+    useFocusEffect(
+        useCallback(() => {
+            fetchData();
+        }, [boardId])
+    );
+
     const fetchData = async () => {
         try {
             const listResponse = await fetchLists(boardId);
@@ -48,42 +56,31 @@ const ListsScreen = ({ route }) => {
         }
     };
 
-    const addList = () => {
-        if (!newListName.trim()) return;
-        const newList = {
-            id: Date.now(), // using Date.now() as a simple unique id
-            name: newListName,
-        };
-        setLists(prevLists => [...prevLists, newList]);
-        setNewListName('');
-    };
-
-    const addCard = (listId) => {
-        const text = newCardText[listId];
-        if (!text || !text.trim()) return;
-        const newCard = {
-            id: Date.now(),
-            idList: listId,
-            name: text,
-        };
-        setCards(prevCards => [...prevCards, newCard]);
-        setNewCardText(prev => ({ ...prev, [listId]: '' }));
-    };
-
-    // Update a list's name in state
-    const updateListName = (listId, newName) => {
-        setLists(prevLists =>
-            prevLists.map(list =>
-                list.id === listId ? { ...list, name: newName } : list
-            )
-        );
+    const addList = async () => {
+        if (!newListName || !newListName.trim()) return;
+        try {
+            const newListData = await addLists(newListName, boardId);
+            if (!newListData) {
+                console.error("Failed to create list.");
+                return;
+            }
+            console.log("New list added:", newListData.id);
+            const newList = {
+                id: newListData.id,
+                name: newListName.trim(),
+            };
+            setLists(prev => [...prev, newList]);
+            setNewListName('');
+        } catch (err) {
+            console.error(err);
+        }
     };
 
     // Delete a list and its cards
-    const deleteList = (listId) => {
+    const handleDeleteList = (listId) => {
         Alert.alert(
             "Delete Card",
-            "Are you sure you want to delete this card?",
+            "Are you sure you want to delete this list?",
             [
                 {
                     text: "Cancel",
@@ -91,10 +88,20 @@ const ListsScreen = ({ route }) => {
                 },
                 {
                     text: "Delete",
-                    onPress: () => {
-                        setLists(prevLists => prevLists.filter(list => list.id !== listId));
-                        setCards(prevCards => prevCards.filter(card => card.idList !== listId));
-                        setActiveForDeleteListId(null);
+                    onPress: async () => {
+                        try {
+                            const deleteListData = await deleteList(listId);
+                            if (!deleteListData) {
+                                console.error("Failed to delete list.");
+                                return;
+                            }
+                            console.log("List deleted:", listId);
+                            setLists(prevLists => prevLists.filter(list => list.id !== listId));
+                            setCards(prevCards => prevCards.filter(card => card.idList !== listId));
+                            setActiveForDeleteListId(null);
+                        } catch (err) {
+                            console.error(err);
+                        }
                     },
                     style: "destructive"
                 }
@@ -102,8 +109,55 @@ const ListsScreen = ({ route }) => {
         );
     };
 
+    const addCard = async (listId) => {
+        const text = newCardText[listId];
+        if (!text || !text.trim()) return;
+        try {
+            const newCard = {
+                idList: listId,
+                name: text,
+            };
+            const newCardData = await addCards(newCard, listId);
+            if (!newCardData) {
+                console.error("Failed to create card.");
+                return;
+            }
+            console.log("New card added:", newCardData.id);
+            setCards(prevCards => [...prevCards, newCardData]);
+            setNewCardText(prev => ({ ...prev, [listId]: '' }));
+        } catch (err) {
+            console.error(err);
+        }
+
+    };
+
+    // Update a list's name in state
+    const updateListName = async (listId, newName) => {
+        try {
+            const oldList = lists.filter((list) => list.id === listId)[0];
+            if (!oldList) {
+                console.error("Failed to find list for update.");
+                return;
+            }
+            const newList = { ...oldList, name: newName };
+            const response = await updateLists(listId, newList);
+            if (!response) {
+                console.error("Failed to update list.");
+                return;
+            }
+            setLists(prevLists =>
+                prevLists.map(list =>
+                    list.id === listId ? { ...list, name: newName } : list
+                )
+            );
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+
     // Delete a card
-    const deleteCard = (cardId) => {
+    const handleDeleteCard = (cardId) => {
         Alert.alert(
             "Delete Card",
             "Are you sure you want to delete this card?",
@@ -114,8 +168,14 @@ const ListsScreen = ({ route }) => {
                 },
                 {
                     text: "Delete",
-                    onPress: () => {
-                        setCards(prevCards => prevCards.filter(card => card.id !== cardId));
+                    onPress: async () => {
+                        try {
+                            const res = await deleteCard(cardId);
+                            if (!res) { console.error("err in del card."); return; }
+                            setCards(prevCards => prevCards.filter(card => card.id !== cardId));
+                        } catch (err) {
+                            console.error(err)
+                        }
                     },
                     style: "destructive"
                 }
@@ -165,7 +225,7 @@ const ListsScreen = ({ route }) => {
                             {/* Conditionally render the delete menu if active for this list */}
                             {activeForDeleteListId === item.id && (
                                 <View style={styles.menuContainer}>
-                                    <Pressable onPress={() => deleteList(item.id)}>
+                                    <Pressable onPress={() => handleDeleteList(item.id)}>
                                         <Text style={styles.menuItemText}>Delete List</Text>
                                     </Pressable>
                                 </View>
@@ -184,15 +244,27 @@ const ListsScreen = ({ route }) => {
                                                 boardId: boardId,
                                                 listId: item.id,
                                                 cardId: card.id,
+                                                cardName: card.name
                                             })
                                         }
-                                        onLongPress={() => deleteCard(card.id)}
+                                        onLongPress={() => handleDeleteCard(card.id)}
                                     >
+                                        {/* Card Name */}
                                         <Text style={styles.cardText}>{card.name}</Text>
+
+                                        {/* Second line: check items progress */}
+                                        {card.badges && typeof card.badges.checkItems === 'number' ? (
+                                            <View style={styles.cardBadgeContainer}>
+                                                <Text style={styles.cardBadgeText}>
+                                                    {card.badges.checkItemsChecked}/{card.badges.checkItems} items completed
+                                                </Text>
+                                            </View>
+                                        ) : null}
                                     </Pressable>
                                 )}
                                 contentContainerStyle={{ flexGrow: 1 }}
                             />
+
 
                             {/* Add Card input and button */}
                             <View style={styles.addCardContainer}>
