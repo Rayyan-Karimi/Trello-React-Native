@@ -11,17 +11,22 @@ import {
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 // internal imports
-import { fetchCards } from '@/components/services/api.service';
-import { fetchLists, addLists, updateLists, deleteList } from '@/components/services/lists.service';
-import { addCards, deleteCard } from '@/components/services/cards.service';
+import { askApiToFetchLists, askApiToAddNewList, askApiToUpdateAList, askApiToDeleteAnExistingList } from '@/components/services/lists.service';
+import { askApiToFetchCards, askApiToAddNewCard, askApiToDeleteExistingCard, askApiToUpdateACard } from '@/components/services/cards.service';
 import styles from '../css/ListStyle'
+import { useDispatch, useSelector } from 'react-redux';
+import { createList, readLists, updateList } from '@/components/store/listsSlice';
+import { readCards, deleteCard, createCard } from '@/components/store/cardSlice';
 
 const ListsScreen = ({ route }) => {
+    const lists = useSelector((state) => state.lists.listsArray);
+    const cards = useSelector((state) => state.cards.cardsArray);
+    const dispatch = useDispatch();
     const navigation = useNavigation();
     const { boardId } = route.params;
 
-    const [lists, setLists] = useState([]);
-    const [cards, setCards] = useState([]);
+    // const [lists, setLists] = useState([]);
+    // const [cards, setCards] = useState([]);
 
     // add list
     const [newListName, setNewListName] = useState('')
@@ -47,10 +52,10 @@ const ListsScreen = ({ route }) => {
 
     const fetchData = async () => {
         try {
-            const listResponse = await fetchLists(boardId);
-            setLists(listResponse);
-            const cardResponse = await fetchCards(boardId);
-            setCards(cardResponse);
+            const listResponse = await askApiToFetchLists(boardId);
+            dispatch(readLists(listResponse));
+            const cardResponse = await askApiToFetchCards(boardId);
+            dispatch(readCards(cardResponse));
         } catch (err) {
             console.error(err);
         }
@@ -59,7 +64,7 @@ const ListsScreen = ({ route }) => {
     const addList = async () => {
         if (!newListName || !newListName.trim()) return;
         try {
-            const newListData = await addLists(newListName, boardId);
+            const newListData = await askApiToAddNewList(newListName, boardId);
             if (!newListData) {
                 console.error("Failed to create list.");
                 return;
@@ -69,7 +74,8 @@ const ListsScreen = ({ route }) => {
                 id: newListData.id,
                 name: newListName.trim(),
             };
-            setLists(prev => [...prev, newList]);
+            // setLists(prev => [...prev, newList]);
+            dispatch(createList(newList));
             setNewListName('');
         } catch (err) {
             console.error(err);
@@ -90,14 +96,18 @@ const ListsScreen = ({ route }) => {
                     text: "Delete",
                     onPress: async () => {
                         try {
-                            const deleteListData = await deleteList(listId);
+                            const deleteListData = await askApiToDeleteAnExistingList(listId);
                             if (!deleteListData) {
                                 console.error("Failed to delete list.");
                                 return;
                             }
                             console.log("List deleted:", listId);
-                            setLists(prevLists => prevLists.filter(list => list.id !== listId));
-                            setCards(prevCards => prevCards.filter(card => card.idList !== listId));
+                            // setLists(prevLists => prevLists.filter(list => list.id !== listId));
+                            dispatch(deleteList(listId));
+                            // setCards(prevCards => prevCards.filter(card => card.idList !== listId));
+                            cards.filter(card => card.idList === listId)?.forEach(card => {
+                                dispatch(deleteCard(card.id))
+                            });
                             setActiveForDeleteListId(null);
                         } catch (err) {
                             console.error(err);
@@ -117,13 +127,14 @@ const ListsScreen = ({ route }) => {
                 idList: listId,
                 name: text,
             };
-            const newCardData = await addCards(newCard, listId);
+            const newCardData = await askApiToAddNewCard(newCard, listId);
             if (!newCardData) {
                 console.error("Failed to create card.");
                 return;
             }
             console.log("New card added:", newCardData.id);
-            setCards(prevCards => [...prevCards, newCardData]);
+            // setCards(prevCards => [...prevCards, newCardData]);
+            dispatch(createCard(newCardData));
             setNewCardText(prev => ({ ...prev, [listId]: '' }));
         } catch (err) {
             console.error(err);
@@ -140,16 +151,17 @@ const ListsScreen = ({ route }) => {
                 return;
             }
             const newList = { ...oldList, name: newName };
-            const response = await updateLists(listId, newList);
+            const response = await askApiToUpdateAList(listId, newList);
             if (!response) {
                 console.error("Failed to update list.");
                 return;
             }
-            setLists(prevLists =>
-                prevLists.map(list =>
-                    list.id === listId ? { ...list, name: newName } : list
-                )
-            );
+            // setLists(prevLists =>
+            //     prevLists.map(list =>
+            //         list.id === listId ? { ...list, name: newName } : list
+            //     )
+            // );
+            dispatch(updateList(newList))
         } catch (err) {
             console.error(err);
         }
@@ -170,9 +182,10 @@ const ListsScreen = ({ route }) => {
                     text: "Delete",
                     onPress: async () => {
                         try {
-                            const res = await deleteCard(cardId);
+                            const res = await askApiToDeleteExistingCard(cardId);
                             if (!res) { console.error("err in del card."); return; }
-                            setCards(prevCards => prevCards.filter(card => card.id !== cardId));
+                            // setCards(prevCards => prevCards.filter(card => card.id !== cardId));
+                            dispatch(deleteCard(cardId));
                         } catch (err) {
                             console.error(err)
                         }

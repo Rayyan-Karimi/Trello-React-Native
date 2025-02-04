@@ -10,13 +10,13 @@ import styles from '../css/BoardStyle'
 
 const Stack = createNativeStackNavigator();
 
-const CustomHeaderTitle = ({ title, tintColor }) => (
+const CustomHeaderTitle = ({ title, tintColor, imageShown=true }) => (
     <View style={styles.headerTitleContainer}>
-        <Image
+        {imageShown && <Image
             source={require('@/assets/trello-logo.png')}
             style={styles.logo}
             resizeMode="contain"
-        />
+        />}
         <Text style={[styles.headerTitleText, { color: tintColor }]}>{title}</Text>
     </View>
 );
@@ -35,7 +35,7 @@ const NavigationStacks = () => {
                 <Stack.Screen name="Boards" component={BoardScreen} options={{
                     // headerShown: false,
                     headerTitle: (props) => (
-                        <CustomHeaderTitle title={'Boards'} />
+                        <CustomHeaderTitle/>
                     ),
                     headerRight: () => (
                         <View style={styles.flexRow}>
@@ -51,7 +51,7 @@ const NavigationStacks = () => {
                 <Stack.Screen name="Lists" component={ListsScreen} options={({ route }) => ({
                     title: route.params.boardName || 'Lists',
                     headerTitle: (props) => (
-                        <CustomHeaderTitle title={`Lists-${route.params.boardName}` || 'Lists'} {...props} />
+                        <CustomHeaderTitle title={`${route.params.boardName}` || 'Lists'} {...props} />
                     ),
                     headerRight: () => (
                         <View style={styles.flexRow}>

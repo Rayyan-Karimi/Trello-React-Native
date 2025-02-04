@@ -9,15 +9,16 @@
     "web": "DARK_MODE=media expo start --web"
   },
   "dependencies": {
-    "@react-native-community/cli": "latest",
     "@expo/metro-runtime": "~4.0.1",
     "@gluestack-ui/icon": "^0.1.25",
     "@gluestack-ui/nativewind-utils": "^1.0.26",
     "@gluestack-ui/overlay": "^0.1.16",
     "@gluestack-ui/toast": "^1.0.8",
+    "@react-native-community/cli": "latest",
     "@react-navigation/drawer": "^7.1.1",
     "@react-navigation/native": "^7.0.14",
     "@react-navigation/native-stack": "^7.2.0",
+    "@reduxjs/toolkit": "^2.5.1",
     "axios": "^1.7.9",
     "babel-plugin-module-resolver": "^5.0.2",
     "expo": "~52.0.28",
@@ -33,6 +34,7 @@
     "react-native-screens": "~4.4.0",
     "react-native-svg": "^15.2.0",
     "react-native-web": "~0.19.13",
+    "react-redux": "^9.2.0",
     "tailwindcss": "^3.4.17"
   },
   "devDependencies": {

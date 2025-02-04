@@ -12,11 +12,14 @@ import {
     KeyboardAvoidingView
 } from 'react-native';
 // internal imports
-import { fetchBoards, addBoard, deleteBoard } from '@/components/services/boards.service';
+import { askApiToFetchAllBoards, askApiToAddBoard, askApiToDeleteBoard } from '@/components/services/boards.service';
 import styles from '../css/BoardStyle';
+import { useDispatch, useSelector } from 'react-redux';
+import { createBoard, deleteBoard, readBoards } from '@/components/store/boardSlice';
 
 const BoardScreen = ({ navigation }) => {
-    const [boards, setBoards] = useState([]);
+    const dispatch = useDispatch();
+    const boards = useSelector((state) => state.boards.boardsArray);
     const [newText, setNewText] = useState("");
 
     const handleDelete = (boardId) => {
@@ -33,15 +36,13 @@ const BoardScreen = ({ navigation }) => {
                     style: "destructive",
                     onPress: async () => {
                         try {
-                            const deletedBoardData = await deleteBoard(boardId);
+                            const deletedBoardData = await askApiToDeleteBoard(boardId);
                             if (!deletedBoardData) {
                                 console.error("Failed to delete board.");
                                 return;
                             }
                             console.log("Deleted:", deletedBoardData);
-                            setBoards(prevBoards =>
-                                prevBoards.filter(board => board.id !== boardId)
-                            );
+                            dispatch(deleteBoard(boardId));
                         } catch (err) {
                             console.error(err);
                         }
@@ -55,17 +56,16 @@ const BoardScreen = ({ navigation }) => {
     const handleAdd = async () => {
         if (!newText || !newText.trim()) return;
         try {
-            const newBoardData = await addBoard(newText);
+            const newBoardData = await askApiToAddBoard(newText);
             if (!newBoardData) {
                 console.error("Failed to create board.");
                 return;
             }
-            console.log("New board added:", newBoardData.id);
             const newBoard = {
                 id: newBoardData.id,
                 name: newText.trim(),
             };
-            setBoards(prev => [...prev, newBoard]);
+            dispatch(createBoard(newBoard));
             setNewText('');
         } catch (err) {
             console.error(err);
@@ -74,8 +74,8 @@ const BoardScreen = ({ navigation }) => {
 
     const fetchBoardsViaApi = async () => {
         try {
-            const newBoards = await fetchBoards();
-            setBoards(newBoards);
+            const newBoards = await askApiToFetchAllBoards();
+            dispatch(readBoards(newBoards));
         } catch (err) {
             console.error("Error fetching boards:", err);
         }
@@ -95,20 +95,24 @@ const BoardScreen = ({ navigation }) => {
                 {/* Boards list */}
                 <FlatList
                     data={boards}
-                    keyExtractor={(item) => item.id.toString()}
-                    renderItem={({ item }) => (
-                        <Pressable
-                            style={[styles.boardItem, styles.text]}
-                            onPress={() =>
-                                navigation.navigate("Lists", {
-                                    boardId: item.id,boardName: item.name
-                                })
-                            }
-                            onLongPress={() => handleDelete(item.id)}
-                        >
-                            <Text style={styles.text}>{item.name}</Text>
-                        </Pressable>
-                    )}
+                    keyExtractor={(item) => {
+                        return item.id.toString()
+                    }}
+                    renderItem={({ item }) => {
+                        return (
+                            <Pressable
+                                style={[styles.boardItem, styles.text]}
+                                onPress={() =>
+                                    navigation.navigate("Lists", {
+                                        boardId: item.id, boardName: item.name
+                                    })
+                                }
+                                onLongPress={() => handleDelete(item.id)}
+                            >
+                                <Text style={styles.text}>{item.name}</Text>
+                            </Pressable>
+                        )
+                    }}
                 />
 
                 {/* Floating add board container */}

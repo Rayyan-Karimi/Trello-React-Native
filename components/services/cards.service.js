@@ -3,7 +3,7 @@ import axios from 'axios';
 const key = process.env.API_KEY;
 const token = process.env.API_TOKEN;
 
-export const fetchCards = async (boardId) => {
+export const askApiToFetchCards = async (boardId) => {
   try {
     const response = await axios.get(`https://api.trello.com/1/boards/${boardId}/cards?key=${key}&token=${token}`);
     return response.data;
@@ -12,7 +12,7 @@ export const fetchCards = async (boardId) => {
   }
 };
 
-export const addCards = async (theCard, theListId) => {
+export const askApiToAddNewCard = async (theCard, theListId) => {
   try {
     const response = await axios.post(`https://api.trello.com/1/cards?idList=${theListId}&key=${key}&token=${token}`, theCard);
     return response.data;
@@ -21,7 +21,7 @@ export const addCards = async (theCard, theListId) => {
   }
 };
 
-export const updateCard = async (cardId, updatedCard) => {
+export const askApiToUpdateACard = async (cardId, updatedCard) => {
   try {
     const response = await axios.put(`https://api.trello.com/1/cards/${cardId}?key=${key}&token=${token}`, updatedCard);
     return response.data;
@@ -30,7 +30,7 @@ export const updateCard = async (cardId, updatedCard) => {
   }
 };
 
-export const deleteCard = async (cardId) => {
+export const askApiToDeleteExistingCard = async (cardId) => {
   try {
     const response = await axios.delete(`https://api.trello.com/1/cards/${cardId}?key=${key}&token=${token}`);
     return response.data;
