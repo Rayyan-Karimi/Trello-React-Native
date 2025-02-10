@@ -15,8 +15,8 @@ import { askApiToFetchLists, askApiToAddNewList, askApiToUpdateAList, askApiToDe
 import { askApiToFetchCards, askApiToAddNewCard, askApiToDeleteExistingCard, askApiToUpdateACard } from '@/components/services/cards.service';
 import styles from '../css/ListStyle'
 import { useDispatch, useSelector } from 'react-redux';
-import { createList, readLists, updateList } from '@/components/store/listsSlice';
-import { readCards, deleteCard, createCard } from '@/components/store/cardSlice';
+import { createList, readLists, updateList, deleteList } from '@/components/store/listsSlice';
+import { readCards, deleteCard, createCard, updateCard } from '@/components/store/cardSlice';
 
 const ListsScreen = ({ route }) => {
     const lists = useSelector((state) => state.lists.listsArray);

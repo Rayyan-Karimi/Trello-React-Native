@@ -21,6 +21,7 @@ const listSlice = createSlice({
             }
         },
         deleteList: (state, action) => {
+            console.log("Hey,", action.payload)
             state.listsArray = state.listsArray.filter(list => list.id !== action.payload)
         }
     }
