@@ -45,7 +45,6 @@ export default styles = StyleSheet.create({
     },
     checkItemText: {
         fontSize: 16,
-        color: "#fff",
     },
     emptyText: {
         fontSize: 18,

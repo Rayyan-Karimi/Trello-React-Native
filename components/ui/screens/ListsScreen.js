@@ -23,7 +23,7 @@ const ListsScreen = ({ route }) => {
     const cards = useSelector((state) => state.cards.cardsArray);
     const dispatch = useDispatch();
     const navigation = useNavigation();
-    const { boardId } = route.params;
+    const { boardId, boardName } = route.params;
 
     // const [lists, setLists] = useState([]);
     // const [cards, setCards] = useState([]);

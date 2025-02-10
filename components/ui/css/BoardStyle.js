@@ -6,15 +6,16 @@ export default styles = StyleSheet.create({
         backgroundColor: "#F5F5F5",
         alignItems: 'center',
         justifyContent: 'center',
-        paddingTop: Platform.OS === "android" ? 25 : 0,
+        paddingTop: Platform.OS === "android" ? 0 : 25,
+        paddingBottom: Platform.OS === "android" ? 75 : 0,
     },
     boardItem: {
         backgroundColor: "white",
         borderRadius: 16,
         borderWidth: 2,
-        paddingHorizontal: 32,
-        paddingVertical: 16,
-        margin: 16,
+        paddingHorizontal: Platform.OS === "android" ? 100 : 0,
+        paddingVertical: 12,
+        marginBottom: 10,
         ...Platform.select({
             ios: {
                 shadowOffset: { width: 2, height: 2 },
@@ -34,7 +35,7 @@ export default styles = StyleSheet.create({
     addListContainer: {
         position: 'absolute',
         right: 16,
-        bottom: 16,
+        bottom: 8,
         flexDirection: 'row',
         alignItems: 'center',
         backgroundColor: '#fff',

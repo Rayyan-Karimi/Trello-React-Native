@@ -70,7 +70,7 @@ export default styles = StyleSheet.create({
         color: 'red',
     },
     cardItem: {
-        backgroundColor: "yellow",
+        backgroundColor: "#f5f5f5",
         marginVertical: 10,
         padding: 8,
         borderRadius: 8,

@@ -23,6 +23,7 @@ import {
 } from '@/components/services/checklist.service';
 import { useDispatch, useSelector } from 'react-redux';
 import { readChecklists, createChecklist, updateChecklist, deleteChecklist } from '@/components/store/checklistSlice';
+import { Progress, ProgressFilledTrack } from "@/components/ui/progress"
 
 // card screen component
 const CardScreen = ({ route }) => {
@@ -173,6 +174,9 @@ const CardScreen = ({ route }) => {
 
                                 {/* Display completion percentage */}
                                 <Text style={styles.percentageText}>{completion}% completed</Text>
+                                <Progress value={completion} size="md" orientation="horizontal" style={{ height: 10 }}>
+                                    <ProgressFilledTrack style={{ backgroundColor: 'green' }} />
+                                </Progress>
 
                                 {/* Check Items */}
                                 {chklist.checkItems && chklist.checkItems.length > 0 ? (
@@ -181,13 +185,19 @@ const CardScreen = ({ route }) => {
                                             key={checkItem.id}
                                             onPress={() => handleCheckItemToggle(chklist.id, checkItem.id, checkItem.state)}
                                             onLongPress={() => handleCheckItemDelete(chklist.id, checkItem.id)}
-                                            style={[
-                                                styles.checkItem,
-                                                { backgroundColor: checkItem.state === 'incomplete' ? 'red' : 'green' }
+                                            style={[styles.checkItem, checkItem.state === 'complete' && { textDecorationLine: 'line-through', backgroundColor: 'lightgreen' },
                                             ]}
                                         >
-                                            <Text style={styles.checkItemText}>{checkItem.name}</Text>
+                                            <Text
+                                                style={[
+                                                    styles.checkItemText,
+                                                    checkItem.state === 'complete' && { textDecorationLine: 'line-through' },
+                                                ]}
+                                            >
+                                                {checkItem.name}
+                                            </Text>
                                         </Pressable>
+
                                     ))
                                 ) : (
                                     <Text style={styles.emptyText}>No checklist items available</Text>

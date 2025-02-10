@@ -11,6 +11,9 @@ import {
     SafeAreaView,
     KeyboardAvoidingView
 } from 'react-native';
+import { Box } from "@/components/ui/box"
+import { Fab, FabLabel, FabIcon } from "@/components/ui/fab"
+import { AddIcon } from "@/components/ui/icon"
 // internal imports
 import { askApiToFetchAllBoards, askApiToAddBoard, askApiToDeleteBoard } from '@/components/services/boards.service';
 import styles from '../css/BoardStyle';
@@ -95,24 +98,23 @@ const BoardScreen = ({ navigation }) => {
                 {/* Boards list */}
                 <FlatList
                     data={boards}
-                    keyExtractor={(item) => {
-                        return item.id.toString()
-                    }}
-                    renderItem={({ item }) => {
-                        return (
-                            <Pressable
-                                style={[styles.boardItem, styles.text]}
-                                onPress={() =>
-                                    navigation.navigate("Lists", {
-                                        boardId: item.id, boardName: item.name
-                                    })
-                                }
-                                onLongPress={() => handleDelete(item.id)}
-                            >
-                                <Text style={styles.text}>{item.name}</Text>
-                            </Pressable>
-                        )
-                    }}
+                    keyExtractor={(item) => item.id.toString()}
+                    renderItem={({ item }) => (
+                        <Pressable
+                            style={[styles.boardItem, styles.text]}
+                            onPress={() =>
+                                navigation.navigate("Lists", {
+                                    boardId: item.id,
+                                    boardName: item.name
+                                })
+                            }
+                            onLongPress={() => handleDelete(item.id)}
+                        >
+                            <Text style={styles.text}>{item.name}</Text>
+                        </Pressable>
+                    )}
+                    // Optionally, add contentContainerStyle if you want extra padding
+                    contentContainerStyle={{ padding: 16 }}
                 />
 
                 {/* Floating add board container */}
